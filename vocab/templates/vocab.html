@@ -94,36 +94,68 @@
 
             $("#attempt").keyup(function(event){
                const value = $("#attempt").val();
+
+               // Logic for NOT sending repetitive requests. Because these requests are asynchronous,
+               // they used to clog the backend code and give unwanted results.
+
                if(value !== last_request){
+
+                  // JSON request. WANTS A JSON FILE. SHOULD NOT RECEIVE AN HTTP REDIRECT
+
                   $.getJSON("/_check", {text: value}, function(data){
                      if(data.result.complete){
+                        
+                        // Just sending an HTTP GET request seemed to fail horribly. Documentation says this does
+                        // the same thing. It behaves like the same thing. Works perfectly on my end.
+
                         window.location = "/success";
                      }
                      if(data.result.has){
                         $(".message").html("")
+
+                        // Found new word
+
                         if(!data.result.alreadyHas && data.result.inJumble){
                            if(!found_header_appended){
                               $("h2").append("You found")
                               found_header_appended = true
                            }
                            $("#results").append(value + " ");
-                           foundcount++;
+
+                        // Found old word
+
                         }else if(data.result.alreadyHas){
                            $(".message").html("You already found " + value)
+
+                        // Characters aren't in jumble
+                        
                         }else if(!data.result.inJumble){
                            $(".message").html(value + " isn't in the list of words")
                         }
                      }else{
+
+                        // Message should be blank if form is blank
+
                         if(value == ""){
                            $(".message").html("")
+
+                        // Edge case
+
                         }else{
                            $(".message").html(value + " isn't in the list of words")
                         }
                      }
                   });
+
+                  // Set last request
+
                   last_request = value;
                }else{
                   //$(".container").append(last_request, value)
+
+                  // Assuming the backend has handled the data from the last request, it should be able to filter out
+                  // duplicate requests on its own now. Doesn't matter what I set last_request to.
+
                   last_request = "";
                   return;
                }

@@ -110,6 +110,11 @@ def check():
     if matched and in_jumble and not (text in matches):
         # Cool, they found a new word
         matches = flask.session.get("matches", [])
+
+        # These two lines may not execute fast enough if duplicate requests are received. It used to be possible
+        # to insert duplicate words into the matches list. Should no longer be a problem. See comments in the
+        # frontend code
+
         matches.append(text)
         flask.session["matches"] = matches
     elif text in matches:
@@ -120,6 +125,7 @@ def check():
     if len(matches) >= CONFIG.SUCCESS_AT_COUNT:
         complete = True
     
+    # Result dictionary
     rslt = {"has": matched, "inJumble": in_jumble, "alreadyHas": already_matched, "complete": complete}
     app.logger.debug(text + " " + str(rslt) + str(matches))
     return flask.jsonify(result=rslt)
