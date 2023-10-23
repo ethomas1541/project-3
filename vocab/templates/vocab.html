@@ -77,27 +77,58 @@
                   <label for="attempt">Word:</label>
                   <input id="attempt" name="attempt" type="text" width="15"
                      autocomplete="off"  autofocus />
-                  <input type="submit" name="try" />
                </form>
             </div>
          </div>
          <br />
-         {% if session.matches|length is not equalto 0  %}
-         <h2>You found </h2>
-         <p id="results">
-            {% for match in session.matches %}
-            {{ match }}
-            {% endfor %}
-         </p>
-         {% endif %}
-         {% with messages = get_flashed_messages() %}
-         {% if messages %}
-         <!-- Mismatch, already found, etc. "flashed" from Python -->
-         {% for message in messages %}
-         <p class="message">{{ message }}</p>
-         {% endfor %}
-         {% endif %}
-         {% endwith %}
+         <h2></h2>
+         <p id = "results"></p>
+         <p class = "message"></p>
+         <script>
+            var found_header_appended = false
+            var last_request = ""
+
+            $("#entry").submit(function(event){
+               event.preventDefault();
+            })
+
+            $("#attempt").keyup(function(event){
+               const value = $("#attempt").val();
+               if(value !== last_request){
+                  $.getJSON("/_check", {text: value}, function(data){
+                     if(data.result.complete){
+                        window.location = "/success";
+                     }
+                     if(data.result.has){
+                        $(".message").html("")
+                        if(!data.result.alreadyHas && data.result.inJumble){
+                           if(!found_header_appended){
+                              $("h2").append("You found")
+                              found_header_appended = true
+                           }
+                           $("#results").append(value + " ");
+                           foundcount++;
+                        }else if(data.result.alreadyHas){
+                           $(".message").html("You already found " + value)
+                        }else if(!data.result.inJumble){
+                           $(".message").html(value + " isn't in the list of words")
+                        }
+                     }else{
+                        if(value == ""){
+                           $(".message").html("")
+                        }else{
+                           $(".message").html(value + " isn't in the list of words")
+                        }
+                     }
+                  });
+                  last_request = value;
+               }else{
+                  //$(".container").append(last_request, value)
+                  last_request = "";
+                  return;
+               }
+            });
+         </script>
       </div>
       <!-- container -->
    </body>
